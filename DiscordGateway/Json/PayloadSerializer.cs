@@ -8,11 +8,67 @@ namespace DiscordGateway.Json
 {
     public class PayloadSerializer : System.Text.Json.Serialization.JsonConverter<BasePayload>
     {
-        private void ParseData(ref Utf8JsonReader reader, Constants.OpCode op)
+        private System.Text.StringBuilder _stringBuilder;
+        public PayloadSerializer()
         {
-            switch(op)
+            _stringBuilder = new StringBuilder();
+        }
+        private string GetObjectString(ref Utf8JsonReader reader)
+        {
+            Span<byte> _bytes = new Span<byte>();
+            do
+            {
+                //if(reader.)
+                //_bytes.Fill(reader.GetByte());
+                //_bytes.Slice(_bytes.Length);
+                switch (reader.TokenType)
+                {
+                    case JsonTokenType.StartArray:
+                        _stringBuilder.Append('[');
+                        break;
+                    case JsonTokenType.StartObject:
+                        _stringBuilder.Append('{');
+                        break;
+                    case JsonTokenType.String:
+                        _stringBuilder.Append(reader.GetString());
+                        _stringBuilder.Append(',');
+                        break;
+                    case JsonTokenType.Number:
+                        _stringBuilder.Append(reader.GetInt32());
+                        break;
+                    case JsonTokenType.True:
+                        _stringBuilder.Append("true");
+                        break;
+                    case JsonTokenType.False:
+                        _stringBuilder.Append("false");
+                        _stringBuilder.Append(',');
+                        break;
+                    case JsonTokenType.PropertyName:
+                        _stringBuilder.Append('\"');
+                        _stringBuilder.Append(reader.GetString());
+                        _stringBuilder.Append('\"');
+                        _stringBuilder.Append(':');
+                        break;
+                    case JsonTokenType.EndArray:
+                        _stringBuilder.Append(']');
+                        break;
+                    default:
+                        break;
+                }
+                reader.Read();
+            } while (reader.TokenType != JsonTokenType.EndArray || reader.TokenType != JsonTokenType.EndObject);
+            // todo: avoid allocations somehow
+            return _stringBuilder.ToString();
+        }
+        private void ParseData(ref Utf8JsonReader reader, ref BasePayload data, Constants.OpCode op)
+        {
+            switch (op)
             {
                 case Constants.OpCode.Hello:
+                    break;
+                case Constants.OpCode.HeartbeatAck:
+                    reader.Read();
+                    data.Event = JsonSerializer.Deserialize<HeartbeatAck>(GetObjectString(ref reader));
                     break;
                 default:
                     break;
@@ -24,16 +80,16 @@ namespace DiscordGateway.Json
             BasePayload result = new BasePayload();
             do
             {
-                if(reader.TokenType == JsonTokenType.PropertyName)
+                if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    switch(reader.GetString())
+                    switch (reader.GetString())
                     {
                         case Constants.PayloadProperties.OP:
                             reader.Read();
                             result.Op = (Constants.OpCode)reader.GetInt32();
                             break;
                         case Constants.PayloadProperties.DATA:
-                            ParseData(ref reader, result.Op);
+                            ParseData(ref reader, ref result, result.Op);
                             break;
                         default:
                             break;

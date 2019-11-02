@@ -113,7 +113,7 @@ namespace DiscordGateway
             try
             {
                 _logger.LogInformation("Received data: {0}", Encoding.UTF8.GetString(buffer.FirstSpan));
-                var payload = JsonSerializer.Deserialize<DiscordPayload>(buffer.FirstSpan);
+                var payload = JsonSerializer.Deserialize<BasePayload>(buffer.FirstSpan);
             }
             catch (Exception ex)
             {
@@ -135,56 +135,6 @@ namespace DiscordGateway
         {
             await Task.WhenAll(StreamResultToPipeAsync(cancellationToken), ReadFromPipeAsync(cancellationToken));
             return this;
-        }
-
-        internal class DiscordPayload
-        {
-            [JsonPropertyName("op")]
-            public OpCode Op { get; set; }
-
-            [JsonConverter(typeof(DiscordEventPayloadConverter))]
-            [JsonPropertyName("d")]
-            public object Event { get; set; }
-        }
-
-        public class DiscordEventPayloadConverter : JsonConverter<BaseEvent>
-        {
-            private System.Text.StringBuilder _stringBuilder;
-
-            public DiscordEventPayloadConverter()
-            {
-                _stringBuilder = new StringBuilder();
-            }
-
-            public override bool CanConvert(Type typeToConvert)
-            {
-                return typeToConvert == typeof(System.String);
-            }
-
-            public override BaseEvent Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Write(Utf8JsonWriter writer, BaseEvent value, JsonSerializerOptions options)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        internal enum OpCode
-        {
-            Dispatch,
-            Heartbeat,
-            Identify,
-            StatusUpdate,
-            VoiceStateUpdate,
-            Resume,
-            Reconnect,
-            RequestGuildMembers,
-            InvalidSession,
-            Hello,
-            HeartbeatAck
         }
     }
 }

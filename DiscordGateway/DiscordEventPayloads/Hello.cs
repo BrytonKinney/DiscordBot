@@ -2,9 +2,12 @@
 
 namespace DiscordGateway.DiscordEventPayloads
 {
-    public class HeartbeatAck : BaseEvent
+    public class Hello : BaseEvent
     {
         [JsonPropertyName("heartbeat_interval")]
         public int HeartbeatInterval { get; set; }
+
+        [JsonPropertyName("_trace")]
+        public object Trace { get; set; }
     }
 }

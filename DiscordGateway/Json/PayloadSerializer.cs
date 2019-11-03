@@ -13,14 +13,11 @@ namespace DiscordGateway.Json
         {
             _stringBuilder = new StringBuilder();
         }
+
         private string GetObjectString(ref Utf8JsonReader reader)
         {
-            Span<byte> _bytes = new Span<byte>();
             do
             {
-                //if(reader.)
-                //_bytes.Fill(reader.GetByte());
-                //_bytes.Slice(_bytes.Length);
                 switch (reader.TokenType)
                 {
                     case JsonTokenType.StartArray:
@@ -31,7 +28,6 @@ namespace DiscordGateway.Json
                         break;
                     case JsonTokenType.String:
                         _stringBuilder.Append(reader.GetString());
-                        _stringBuilder.Append(',');
                         break;
                     case JsonTokenType.Number:
                         _stringBuilder.Append(reader.GetInt32());
@@ -41,7 +37,6 @@ namespace DiscordGateway.Json
                         break;
                     case JsonTokenType.False:
                         _stringBuilder.Append("false");
-                        _stringBuilder.Append(',');
                         break;
                     case JsonTokenType.PropertyName:
                         _stringBuilder.Append('\"');
@@ -68,7 +63,7 @@ namespace DiscordGateway.Json
                     break;
                 case Constants.OpCode.HeartbeatAck:
                     reader.Read();
-                    data.Event = JsonSerializer.Deserialize<HeartbeatAck>(GetObjectString(ref reader));
+                    //data.Event = JsonSerializer.Deserialize<Hello>(GetObjectString(ref reader));
                     break;
                 default:
                     break;

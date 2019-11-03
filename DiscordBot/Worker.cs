@@ -12,6 +12,7 @@ namespace DiscordBot
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
+
         private readonly IDiscordSocketClient _discSock;
         public Worker(ILogger<Worker> logger, IDiscordSocketClient discSock)
         {

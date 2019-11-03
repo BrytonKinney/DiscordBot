@@ -1,4 +1,5 @@
 using DiscordGateway;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -17,10 +18,17 @@ namespace DiscordBot
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<Worker>();
-                    services.AddSingleton<IDiscordSocketClient, DiscordSocketClient>((provider) =>
-                    {
-                        return new DiscordSocketClient(provider.GetService<ILogger<DiscordSocketClient>>(), "wss://gateway.discord.gg/?v=6&encoding=json");
-                    });
+                    //services.AddSingleton<IDiscordAuthorization, DiscordAuthorization>((provider) =>
+                    //{
+                    //    var cfg = provider.GetService<IConfiguration>();
+                    //    var clientSecrets = cfg.GetSection("ClientSecrets");
+                    //    return new DiscordAuthorization(
+                    //        clientSecrets.GetValue<string>("ClientId"),
+                    //        clientSecrets.GetValue<string>("ClientSecret"),
+                    //        clientSecrets.GetValue<string>("RedirectUri")
+                    //    );
+                    //});
+                    services.AddSingleton<IDiscordSocketClient, DiscordSocketClient>();
                 });
     }
 }

@@ -9,4 +9,9 @@ namespace DiscordGateway.Constants
         public const string OP = "op";
         public const string DATA = "d";
     }
+
+    public static class EventProperties
+    {
+        public const string HEARTBEAT_INTERVAL = "heartbeat_interval";
+    }
 }

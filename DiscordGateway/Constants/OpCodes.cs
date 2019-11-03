@@ -11,7 +11,7 @@ namespace DiscordGateway.Constants
         Identify,
         StatusUpdate,
         VoiceStateUpdate,
-        Resume,
+        Resume = 6,
         Reconnect,
         RequestGuildMembers,
         InvalidSession,

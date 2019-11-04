@@ -18,7 +18,6 @@ namespace DiscordGateway
         private const string _baseEndpoint = "wss://gateway.discord.gg/?v=6&encoding=json";
         private const int MAX_BUFFER = 512;
         private readonly ILogger<DiscordSocketClient> _logger;
-        //private readonly IDiscordAuthorization _authorizer;
         private Pipe _payloadPipe;
         private int _heartbeatInterval;
         private string _token;
@@ -31,7 +30,6 @@ namespace DiscordGateway
         public DiscordSocketClient(ILogger<DiscordSocketClient> logger, IConfiguration configuration)//, IDiscordAuthorization authorizer)
         {
             _client = new ClientWebSocket();
-           //_authorizer = authorizer;
             _logger = logger;
             _payloadPipe = new Pipe();
             _token = configuration.GetSection("BotSecrets")["Token"];
@@ -165,7 +163,7 @@ namespace DiscordGateway
             }
         }
 
-        public async Task SendAsync(Memory<byte> buffer, System.Threading.CancellationToken cancellationToken = default)
+        public async Task SendAsync<T>(T eventData, System.Threading.CancellationToken cancellationToken = default)
         {
 
         }

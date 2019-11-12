@@ -1,4 +1,5 @@
-﻿using DiscordGateway.DiscordEventPayloads;
+﻿using DiscordGateway.Discord.Payloads.Abstractions;
+using DiscordGateway.Discord.Payloads.Implementations.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -7,7 +8,6 @@ using System.IO.Pipelines;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DiscordGateway
@@ -18,6 +18,7 @@ namespace DiscordGateway
         private const string _baseEndpoint = "wss://gateway.discord.gg/?v=6&encoding=json";
         private const int MAX_BUFFER = 512;
         private readonly ILogger<DiscordSocketClient> _logger;
+        private readonly ICommandFactory _cmdFactory;
         //private readonly IDiscordAuthorization _authorizer;
         private Pipe _payloadPipe;
         private int _heartbeatInterval;
@@ -28,13 +29,13 @@ namespace DiscordGateway
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="discordEndpoint"></param>
-        public DiscordSocketClient(ILogger<DiscordSocketClient> logger, IConfiguration configuration)//, IDiscordAuthorization authorizer)
+        public DiscordSocketClient(ILogger<DiscordSocketClient> logger, IConfiguration configuration, ICommandFactory cmdFactory)
         {
             _client = new ClientWebSocket();
-           //_authorizer = authorizer;
             _logger = logger;
             _payloadPipe = new Pipe();
-            _token = configuration.GetSection("BotSecrets")["Token"];
+            _token = configuration.GetSection(Bot.BotConstants.BOT_SECRETS)[Bot.BotConstants.TOKEN];
+            _cmdFactory = cmdFactory;
         }
 
         /// <summary>
@@ -46,34 +47,12 @@ namespace DiscordGateway
         {
             //await _authorizer.GetAuthorizationTokenAsync();
             await _client.ConnectAsync(new Uri(_baseEndpoint), cancellationToken);
-            await HandleResultAsync(cancellationToken);
             return this;
         }
 
         private void UpdateHeartbeatInterval(int heartbeatInterval)
         {
             _heartbeatInterval = heartbeatInterval;
-            //Task.
-        }
-
-        private async Task SendIdentify(System.Threading.CancellationToken cancellationToken = default)
-        {
-            var identify = new Identify()
-            {
-                CompressionEnabled = false,
-                GuildMemberThreshold = 50,
-                Token = _token,
-                Properties = new DiscordObjects.ConnectionProperties()
-                {
-                    Browser = "SBDUBot V2",
-                    Device = "SBDUBot V2",
-                    OperatingSystem = "Windows ME"
-                }
-            };
-            var payload = new DispatchPayload { Event = identify, EventName = "IDENTIFY", Op = Constants.OpCode.Identify, SequenceNumber = 1 };
-            var jsonPayload = JsonSerializer.SerializeToUtf8Bytes(payload);
-            _logger.LogInformation("Sending Identify: {0}", System.Text.Encoding.UTF8.GetString(jsonPayload));
-            await _client.SendAsync(jsonPayload, WebSocketMessageType.Text, true, cancellationToken);
         }
 
         /// <summary>
@@ -102,7 +81,6 @@ namespace DiscordGateway
                 if (flush.IsCompleted)
                     break;
             }
-            await _payloadPipe.Writer.CompleteAsync();
         }
 
         /// <summary>
@@ -137,7 +115,6 @@ namespace DiscordGateway
                     _logger.LogError(ex, "Error occurred while processing data from pipe.");
                 }
             }
-            await _payloadPipe.Reader.CompleteAsync();
         }
 
         public async Task ProcessPayload(ReadOnlySequence<byte> buffer, System.Threading.CancellationToken cancellationToken = default)
@@ -145,16 +122,15 @@ namespace DiscordGateway
             try
             {
                 _logger.LogInformation("Received data: {0}", Encoding.UTF8.GetString(buffer.FirstSpan));
-                var payload = JsonSerializer.Deserialize<BasePayload>(buffer.FirstSpan);
+                var payload = JsonSerializer.Deserialize<Command>(buffer.FirstSpan);
                 switch(payload.Op)
                 {
-                    case Constants.OpCode.Hello:
-                        UpdateHeartbeatInterval(payload.Event.GetProperty(Constants.EventProperties.HEARTBEAT_INTERVAL).GetInt32());
-                        await SendIdentify(cancellationToken);
+                    case Discord.Constants.OpCode.Hello:
+                        await SendAsync(_cmdFactory.CreateCommand<Identify>(Discord.Constants.OpCode.Identify), cancellationToken);
                         break;
-                    case Constants.OpCode.Heartbeat:
+                    case Discord.Constants.OpCode.Heartbeat:
                         break;
-                    case Constants.OpCode.HeartbeatAck:
+                    case Discord.Constants.OpCode.HeartbeatAck:
                         break;
                     default: break;
                 }
@@ -165,9 +141,11 @@ namespace DiscordGateway
             }
         }
 
-        public async Task SendAsync(Memory<byte> buffer, System.Threading.CancellationToken cancellationToken = default)
+        public async Task SendAsync<T>(ICommand<T> eventPayload, System.Threading.CancellationToken cancellationToken = default)
         {
-
+            var serializedPayload = JsonSerializer.SerializeToUtf8Bytes(eventPayload);
+            _logger.LogInformation("Sending payload: {0}", System.Text.Encoding.UTF8.GetString(serializedPayload));
+            await _client.SendAsync(serializedPayload, WebSocketMessageType.Text, true, cancellationToken); 
         }
 
         /// <summary>
@@ -178,6 +156,7 @@ namespace DiscordGateway
         public async Task<DiscordSocketClient> HandleResultAsync(System.Threading.CancellationToken cancellationToken = default)
         {
             await Task.WhenAll(StreamResultToPipeAsync(cancellationToken), ReadFromPipeAsync(cancellationToken));
+            _payloadPipe.Reset();
             return this;
         }
     }

@@ -1,4 +1,6 @@
 using DiscordGateway;
+using DiscordGateway.Discord.Payloads.Abstractions;
+using DiscordGateway.Discord.Payloads.Implementations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,6 +30,7 @@ namespace DiscordBot
                     //        clientSecrets.GetValue<string>("RedirectUri")
                     //    );
                     //});
+                    services.AddSingleton<ICommandFactory, CommandFactory>();
                     services.AddSingleton<IDiscordSocketClient, DiscordSocketClient>();
                 });
     }

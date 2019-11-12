@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DiscordGateway.DiscordEventPayloads
+namespace DiscordGateway.Discord.Payloads.Abstractions
 {
-    public class BaseEvent
+    public interface IPayload
     {
     }
 }

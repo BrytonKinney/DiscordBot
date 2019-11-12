@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using DiscordGateway.Discord.Payloads.Abstractions;
+using System.Text.Json.Serialization;
 
-namespace DiscordGateway.DiscordEventPayloads
+namespace DiscordGateway.Discord.Payloads.Implementations.Events
 {
-    public class Hello : BaseEvent
+    public class Hello : IPayload
     {
         [JsonPropertyName("heartbeat_interval")]
         public int HeartbeatInterval { get; set; }

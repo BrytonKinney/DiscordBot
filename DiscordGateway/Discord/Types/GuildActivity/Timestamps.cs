@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace DiscordGateway.DiscordObjects.GuildActivity
+namespace DiscordGateway.Discord.Types.GuildActivity
 {
     public class Timestamps
     {

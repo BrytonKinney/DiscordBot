@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DiscordGateway.Constants
+namespace DiscordGateway.Discord.Constants
 {
     public static class PayloadProperties
     {
         public const string OP = "op";
         public const string DATA = "d";
-    }
-
-    public static class EventProperties
-    {
-        public const string HEARTBEAT_INTERVAL = "heartbeat_interval";
+        public const string SEQUENCE_NUMBER = "s";
+        public const string EVENT_NAME = "t";
     }
 }

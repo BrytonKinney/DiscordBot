@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DiscordGateway.Constants
+namespace DiscordGateway.Discord.Constants
 {
     public enum ActivityTypes
     {

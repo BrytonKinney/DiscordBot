@@ -22,10 +22,11 @@ namespace DiscordBot
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await _discSock.ConnectAsync(stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
+                await _discSock.HandleResultAsync(stoppingToken);
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await _discSock.ConnectAsync(stoppingToken);
             }
         }
     }
